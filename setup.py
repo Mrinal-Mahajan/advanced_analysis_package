@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="advanced_analysis_package",
-    version="0.0.1",
+    version="0.0.2",
     author="Mrinal Mahajan",
     author_email="mahajanmrinal2013@gmail.com",
     description="A package for advanced level variabe ananlysis and reduction for pandas dataframe",
