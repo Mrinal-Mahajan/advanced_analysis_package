@@ -46,8 +46,9 @@ def inter_correlation_clusters(data,cutoff=.7):
         
     return tree_cluster
 
+
 ## return columns which are not correlated above cutoff
-def varclus(data,cutoff):
+def varclus(data,cutoff,maxkeep=1,maxdrop=None):
     columns = []
     correlations=data.corr()
     clusters= inter_correlation_clusters(data,cutoff=cutoff)
@@ -91,21 +92,23 @@ def varclus(data,cutoff):
         return float(1-r2_own)/(1-r2_next)
     
     for c1 in list(clusters.keys()):
-        if len(clusters[c1])>1:
+    	clus_len = len(clusters[c1])
+        if clus_len>1:
             own_cluster = clusters[c1]
             next_cluster = clusters[next_closest(c1)]
-            ration=np.inf
+            ratio_list = []
             for col in clusters[c1]:
                 col_ratio = get_squared_ratio(col,own_cluster,next_cluster)
-                if col_ratio<ratio:
-                    ratio=col_ratio
-                    clust_col=col
-            columns.append(clust_col)
+            	ratio_list.append(col,col_ratio)
+            ratio_list = sorted(ratio_list,key = lambda x: x[1])
+            if maxdrop is not None:
+            	columns += [col[0] for col in ratio_list[:-min(maxdrop,clus_len)]]
+            else:
+            	columns += [col[0] fo col in ratio_list[:min(maxkeep,clus_len)]]
         else:
             columns.append(clusters[c1][0])
             
     return columns
-
 
 ## return columns to be dropped by vif reduction method
 def vif_reduction(data,limit=2.5):
@@ -134,36 +137,35 @@ def vif_reduction(data,limit=2.5):
 	return vif_drop_cols
 
 ## return columns to be dropped by backward selection method
-def backward_selection(df,dv,regression=True):
-	flag=0
-	cols_dropped=[dv]
+def backward_selection(df,dv,regression=True,alpha=.05):
+    flag=0
+    cols_dropped=[dv]
     if regression:
-    	while flag==0:
-    	    model = sm.OLS(endog=np.array(df[dv]),exog=np.array(df.drop(cols_dropped,axis=1)))
-    	    results = model.fit()
-    	    pvalues=list(results.pvalues)
-    	    drop_index = pvalues.index(max(pvalues))
-    	    col_drop = df.drop(cols_dropped,axis=1).columns[drop_index]
-    	    print(col_drop+'-'+str(pvalues[drop_index]))
-    	    if pvalues[drop_index]>.05:
-    	        cols_dropped.append(col_drop)
-    	    else:
-    	        flag=1
+        while flag==0:
+            model = sm.OLS(endog=np.array(df[dv]),exog=np.array(df.drop(cols_dropped,axis=1)))
+            results = model.fit()
+            pvalues=list(results.pvalues)
+            drop_index = pvalues.index(max(pvalues))
+            col_drop = df.drop(cols_dropped,axis=1).columns[drop_index]
+            print(col_drop+'-'+str(pvalues[drop_index]))
+            if pvalues[drop_index]> alpha:
+                cols_dropped.append(col_drop)
+            else:
+                flag=1
     else:
         while flag==0:
-        model = sm.Logit(endog=np.array(df[dv]),exog=np.array(df.drop(cols_dropped,axis=1)))
-        results = model.fit()
-        pvalues=list(results.pvalues)
-        drop_index = pvalues.index(max(pvalues))
-        col_drop = df.drop(cols_dropped,axis=1).columns[drop_index]
-        print(col_drop+'-'+str(pvalues[drop_index]))
-        if pvalues[drop_index]>.05:
-            cols_dropped.append(col_drop)
-        else:
-            flag=1
+            model = sm.Logit(endog=np.array(df[dv]),exog=np.array(df.drop(cols_dropped,axis=1)))
+            results = model.fit()
+            pvalues=list(results.pvalues)
+            drop_index = pvalues.index(max(pvalues))
+            col_drop = df.drop(cols_dropped,axis=1).columns[drop_index]
+            print(col_drop+'-'+str(pvalues[drop_index]))
+            if pvalues[drop_index]> alpha:
+                cols_dropped.append(col_drop)
+            else:
+                flag=1
 
-
-
-	return cols_dropped.remove(dv)
+    cols_dropped.remove(dv)
+    return cols_dropped
 
 

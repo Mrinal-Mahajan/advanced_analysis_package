@@ -85,7 +85,7 @@ def edd(data,dv=None,regression=True,percentile=[.01,.05,.1,.5,.9,.95,.99],cv=[2
                 edd.loc[edd['Var']==col,'correlation/p_value'] = aov_table.loc[dv,'PR(>F)']
 
             for col in categorical:
-                f =pd.crosstab(df[dv],df[col],dropna=False)
+                f =pd.crosstab(data[dv],data[col],dropna=False)
                 edd.loc[edd['Var']==col,'correlation/p_value'] = chisquare(np.reshape(np.array(f),np.product(f.shape))).pvalue
     edd.reset_index(inplace=True)
     edd.drop('index',axis=1,inplace=True)
@@ -100,28 +100,29 @@ def graphical_analysis(data,dv,path='',regression=True):
             if col != dv:
                 ax = data.plot(col,dv)
                 fig = ax.get_figure()
-                fig.savefig(path+col+'.png')
+                fig.savefig(path+col+'.png',dpi=1000)
         for col in categorical:
-            ax = data.boxplot(dv,by=col)
-            fig = ax.get_figure()
-            fig.savefig(path+col+'.png')
+            if col != dv:
+                ax = data.boxplot(dv,by=col)
+                fig = ax.get_figure()
+                fig.savefig(path+col+'.png',dpi=1000)
     else:
         for col in numerical:
             if col != dv:
                 ax = data.boxplot(col,by=dv)
                 fig = ax.get_figure()
-                fig.savefig(path+col+'.png')
+                fig.savefig(path+col+'.png',dpi=1000)
         for col in categorical:
             if col != dv:
-                f =pd.crosstab(df[dv],df[col],dropna=False)
-                for col in f.columns:
-                    f[col] = f[col].apply(lambda x: x/f[col].sum()*100)
+                f =pd.crosstab(data[dv],data[col],dropna=False)
+                for cat in f.columns:
+                    f[cat] = f[cat].apply(lambda x: x/f[cat].sum()*100)
                 ax = plt.subplot(111, frame_on=False) # no visible frame
                 ax.xaxis.set_visible(False)  # hide the x axis
                 ax.yaxis.set_visible(False)  # hide the y axis
 
                 table(ax, f)  
 
-                plt.savefig(path+col+'.png')
+                plt.savefig(path+col+'.png',dpi=1000)
 
 

@@ -14,7 +14,7 @@ from sklearn.linear_model import LinearRegression
 ## s is column name on which exponential smoothning is to be applied
 ## high = True when smoothning required above 99 percentile and low when smoothning required below 1 percentile
 def exponential_smoothning(data,s,alpha=.5,high=True,low=True):
-	p1,p5,p95,p99 = data[s].quantile(.01),data[s].quantile(.05),data[s].quantile(.95),data[s].quantile(.99)
+    p1,p5,p95,p99 = data[s].quantile(.01),data[s].quantile(.05),data[s].quantile(.95),data[s].quantile(.99)
     if alpha<=0 or alpha>=1:
         raise ValueError('alpha should be between 0 and 1')
     data.sort_values(s,ascending=True,inplace=True)
